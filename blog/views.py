@@ -4,7 +4,7 @@ from rest_framework.viewsets import ModelViewSet
 from .models import Category,Post,Comment,Like
 from .serializers import *
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .premissions import IsOwner
+from .premissions import *
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -19,17 +19,18 @@ from .pagination import postPagination
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class PostViewSet(ModelViewSet):
-    
+
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     pagination_class = postPagination
 
     lookup_field = 'slug'
 
-    permission_classes = [IsAuthenticatedOrReadOnly,IsOwner]
+    permission_classes = [IsAuthenticatedOrReadOnly,IsAuthorOrReadOnly]
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['category']
@@ -69,10 +70,13 @@ class PostViewSet(ModelViewSet):
 class CommentViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly,IsOwner]
+    permission_classes = [IsAuthenticatedOrReadOnly,IsCommentOwner]
 
     def perform_create(self, serializer):
-        return serializer.save(user = self.request.user)
+        post_id = self.request.data.get('post')
+        parent_id = self.request.data.get('parent')
+
+        return serializer.save(user = self.request.user, post_id=post_id, parent_id = parent_id)
 
 
 class RegisterViwe(APIView):

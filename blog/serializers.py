@@ -14,6 +14,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
 
     user = serializers.StringRelatedField()
+    replies = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
@@ -22,7 +23,10 @@ class CommentSerializer(serializers.ModelSerializer):
             'user',
             'text',
             'create_at',
+            'replies',
         ]
+    def get_replies(self,obj):
+        return CommentSerializer(obj.replies.all(),many = True).data
 
 
 class LikeSerializer(serializers.ModelSerializer):

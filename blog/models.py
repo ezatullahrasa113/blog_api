@@ -54,7 +54,13 @@ class Like(models.Model):
     user = models.ForeignKey(User,on_delete = models.CASCADE)
 
     class Meta:
-        unique_together = ('post','user')
+        constraints = [
+            models.UniqueConstraint(
+                fields = ['post','user'],
+                name = 'unique_post_like'
+            )
+        ]
+       
 
 
     

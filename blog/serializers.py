@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Category,Post,Comment,Like
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -34,6 +35,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     comments = CommentSerializer(many = True, read_only = True)
     likes_count = serializers.IntegerField(read_only = True)
+    liked_by_user = serializers.SerializerMethodField()
 
     author = serializers.SlugRelatedField(read_only = True, slug_field = 'username')
     category = serializers.SlugRelatedField(read_only = True, slug_field = 'name')
@@ -45,8 +47,8 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_liked_by_user(self,obj):
         request = self.context.get('request')
-        if request and request.user.is_authenticate:
-            return obj.likes.filere(user=request.user).exists()
+        if request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
         return False
 
         
@@ -79,3 +81,12 @@ class RegisterSeralizer(serializers.ModelSerializer):
         )
 
         return user
+    
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def save(self):
+        refresh_token = self.validated_data['refresh']
+
+        token = RefreshToken(refresh_token)
+        token.blacklist()

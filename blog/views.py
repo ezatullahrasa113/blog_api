@@ -8,8 +8,11 @@ from .premissions import IsOwner
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter,OrderingFilter
+from .pagination import postPagination
 
 
 
@@ -19,18 +22,26 @@ class CategoryViewSet(ModelViewSet):
 
 
 class PostViewSet(ModelViewSet):
+    
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    pagination_class = postPagination
 
     lookup_field = 'slug'
 
     permission_classes = [IsAuthenticatedOrReadOnly,IsOwner]
 
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['category']
+    search_fields = ['title', 'content']
+    ordering_fields = ['create_at']
+    ordering = ['-create_at']
+
     def perform_create(self, serializer):
         return serializer.save(author = self.request.user)
     
     def get_queryset(self):
-        return Post.objects.annotate(
+        return Post.objects.select_related('author','category').annotate(
             likes_count = Count('likes')
         )
     
@@ -58,22 +69,10 @@ class PostViewSet(ModelViewSet):
 class CommentViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly,IsOwner]
 
     def perform_create(self, serializer):
-        return serializer.save(author = self.request.user)
-
-
-
-class LikeViewSet(ModelViewSet):
-    queryset = Like.objects.all()
-    serializer_class = LikeSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def perform_create(self, serializer):
-        return serializer.save(author = self.request.user)
-
-
+        return serializer.save(user = self.request.user)
 
 
 class RegisterViwe(APIView):
@@ -84,3 +83,13 @@ class RegisterViwe(APIView):
             serializers.save()
             return Response(serializers.data,status=status.HTTP_201_CREATED)
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self,request):
+        serializer = LogoutSerializer(data= request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({'message':'Successfully logged out'},status=status.HTTP_205_RESET_CONTENT)

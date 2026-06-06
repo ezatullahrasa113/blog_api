@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Category,Post,Comment,Like
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -90,7 +91,13 @@ class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
     def save(self):
-        refresh_token = self.validated_data['refresh']
+        
+        try:
+            refresh_token = self.validated_data['refresh']
 
-        token = RefreshToken(refresh_token)
-        token.blacklist()
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except TokenError:
+            raise serializers.ValidationError(
+                {'refresh':'Token is invalid or expired'}
+            )

@@ -3,13 +3,13 @@ from rest_framework.routers import DefaultRouter
 from .views import *
 
 router = DefaultRouter()
-router.register('categorise',CategoryViewSet)
+router.register('categories',CategoryViewSet)
 router.register('posts',PostViewSet)
-router.register('commentes',CommentViewSet)
+router.register('comments',CommentViewSet)
 
 
 urlpatterns=[
-    path('register/',RegisterViwe.as_view()),
+    path('register/',RegisterViwe.as_view(),name='register'),
     path('logout/',LogoutView.as_view(),name='logout'),
 ]
 

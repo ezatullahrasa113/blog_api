@@ -22,10 +22,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
-      env:
-        DB_NAME: blog_db
-        SECRET_KEY: test_secret_key
-        DEBUG: "True"
+        env:
+          DB_NAME: blog_db
+          SECRET_KEY: test_secret_key
+          DEBUG: "True"
         run: |
           python manage.py test
 

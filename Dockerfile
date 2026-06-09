@@ -1,7 +1,7 @@
 FROM python:3.12
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
@@ -12,4 +12,4 @@ RUN pip install -r requirements.txt
 
 COPY . /app/
 
-CMD ["gunicorn", "blog.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000"]
